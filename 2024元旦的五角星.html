@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画一个点</title>
+</head>
+
+<body onload="init()">
+    <canvas id="app">
+        your broswer does not support canvas
+    </canvas>
+</body>
+<script>
+    // 顶点着色器
+    const vShaderStr = `
+        attribute vec4 a_position;
+        void main () {
+            gl_Position = a_position;
+        }
+    `
+    // 片元着色器
+    const fShaderStr = `
+        // precision mediump float;
+        // uniform vec4 u_fragColor;
+        void main() {
+            // gl_FragColor = u_fragColor
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }
+    `
+    let initGl = () => {
+        let canvas = document.querySelector('#app')
+        let gl = canvas.getContext('webgl')
+        // 设置背景颜色
+        gl.clearColor(1.0, 1.0, 0.0, 1)
+        return gl
+    }
+
+    // 创建shader
+    let createShader = (gl, shaderSource, type) => {
+        const shader = gl.createShader(type)
+        gl.shaderSource(shader, shaderSource)
+        gl.compileShader(shader)
+        // if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        //     var info = gl.getShaderInfoLog(shader);
+        //     throw "Could not compile WebGL program. \n\n" + info;
+        // }
+        return shader
+    }
+
+    let initShaders = (gl) => {
+        const vShader = createShader(gl, vShaderStr, gl.VERTEX_SHADER)
+        const fShader = createShader(gl, fShaderStr, gl.FRAGMENT_SHADER)
+
+        const program = gl.createProgram()
+        gl.attachShader(program, vShader)
+        gl.attachShader(program, fShader)
+
+        gl.linkProgram(program)
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            var info = gl.getProgramInfoLog(program);
+            throw new Error("Could not compile WebGL program. \n\n" + info);
+        }
+        gl.useProgram(program)
+        gl.program = program
+    }
+
+    let initBuffer = (gl) => {
+        const vertices = new Float32Array([
+            - 0.307768, -0.423607,
+
+            -0.190211, -0.061803,
+
+            -0.497980, 0.161803,
+
+            -0.117557, 0.161803,
+
+            0.0, 0.523607,
+
+            0.117557, 0.161803,
+
+            0.497980, 0.161803,
+
+            0.190211, -0.061803,
+
+            0.307768, -0.423607,
+
+            0.0, -0.2
+        ])
+        const buffer = gl.createBuffer()
+        if (!buffer) {
+            console.log('Failed to create the buffer object');
+            return false;
+        }
+        // 将缓冲区对象绑定到目标
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+        // 将数据写入缓冲区对象
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
+        // 获取a_position
+        const a_position = gl.getAttribLocation(gl.program, 'a_position')
+        if (a_position < 0) {
+            console.log('Failed to get the storage location of a_Color');
+            return -1;
+        }
+        // 将缓冲区里的数据传给a_position
+        gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0);
+        // 使变量生效
+        gl.enableVertexAttribArray(a_position)
+    }
+
+    let draw = (gl) => {
+        // 使用指定的背景色冲刷颜色缓冲区
+        gl.clear(gl.COLOR_BUFFER_BIT)
+        gl.drawArrays(gl.LINE_LOOP, 0, 10)
+
+    }
+    let init = () => {
+        const gl = initGl()
+        console.log(gl)
+        initShaders(gl)
+        initBuffer(gl)
+        draw(gl)
+    }
+
+</script>
+
+</html>
